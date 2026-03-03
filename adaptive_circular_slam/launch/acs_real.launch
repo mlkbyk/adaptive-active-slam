@@ -1,0 +1,82 @@
+<launch>
+  <!-- Assumes SLAM (/map), TF, and move_base are already running -->
+
+  <!-- 1) Candidate generator -->
+  <node pkg="adaptive_circular_slam" type="circle_generator_node" name="acs_circle_generator" output="screen">
+    <param name="enabled" value="true"/>
+    <param name="use_score" value="false"/>  <!-- IMPORTANT: new pipeline does not use /circle_score -->
+    <param name="points" value="36"/>
+    <param name="base_radius" value="1.2"/>
+    <param name="publish_rate" value="1.0"/>
+    <param name="frame_id" value="map"/>
+    <param name="base_frame" value="base_link"/> <!-- change to base_footprint if needed -->
+  </node>
+
+  <!-- 2) Gain evaluator (publishes /candidate_scores) -->
+  <node pkg="adaptive_circular_slam" type="gain_evaluator_node" name="acs_gain_evaluator" output="screen">
+    <param name="eval_radius_m" value="2.5"/>
+    <param name="w_gain" value="1.0"/>
+    <param name="w_risk" value="1.0"/>
+    <param name="w_health" value="0.5"/>
+    <param name="boundary_bonus" value="0.10"/>
+    <!-- Optional tuning -->
+    <param name="occupied_threshold" value="65"/>
+    <param name="unknown_value" value="-1"/>
+  </node>
+
+  <!-- 3) SLAM health monitor (publishes /slam_health) -->
+  <node pkg="adaptive_circular_slam" type="slam_health_monitor_node" name="acs_slam_health" output="screen">
+    <param name="map_frame" value="map"/>
+    <param name="base_frame" value="base_link"/>
+    <!-- Optional tuning -->
+    <param name="cov_k_gain" value="5.0"/>
+    <param name="tf_jump_threshold_m" value="0.35"/>
+    <param name="tf_jump_penalty" value="0.35"/>
+    <param name="publish_rate" value="10.0"/>
+    <param name="ema_alpha" value="0.15"/>
+  </node>
+
+  <!-- 4) Decision manager (publishes /adaptive_goal + /acs/* metrics) -->
+  <node pkg="adaptive_circular_slam" type="decision_manager_node" name="acs_decision_manager" output="screen">
+    <param name="publish_rate" value="5.0"/>
+    <param name="min_replan_interval_s" value="3.0"/>
+    <param name="hysteresis_margin" value="0.08"/>
+    <param name="min_goal_separation_m" value="0.5"/>
+
+    <!-- IMPORTANT: these match the upgraded decision_manager_node.cpp -->
+    <param name="health_pause_threshold" value="0.25"/>
+    <param name="health_recover_threshold" value="0.45"/>
+    <param name="health_explore_threshold" value="0.70"/>
+
+    <param name="use_distance_penalty" value="true"/>
+    <param name="w_distance" value="0.15"/>
+
+    <!-- Robot reference (optional; can remain 0/0 until TF-based improvement) -->
+    <param name="robot_x" value="0.0"/>
+    <param name="robot_y" value="0.0"/>
+  </node>
+
+  <!-- 5) Motion executor (sends goals to move_base) -->
+  <node pkg="adaptive_circular_slam" type="motion_executor_node" name="acs_motion_executor" output="screen">
+    <param name="min_send_interval_s" value="4.0"/>
+    <param name="goal_timeout_s" value="40.0"/>
+  </node>
+
+  <!-- 6) Visual marker for best candidate -->
+  <node pkg="adaptive_circular_slam" type="candidate_visualizer_node" name="acs_candidate_viz" output="screen">
+    <param name="frame_id" value="map"/>
+    <param name="marker_scale" value="0.25"/>
+  </node>
+
+  <!-- 7) CSV metrics logger -->
+  <node pkg="adaptive_circular_slam" type="metrics_logger_node" name="acs_metrics_logger" output="screen">
+    <param name="log_path" value="$(env HOME)/acs_metrics.csv"/>
+  </node>
+  
+  !-- 8) Control panel -->
+  <node pkg="adaptive_circular_slam"
+      type="acs_control_panel_node"
+      name="acs_control_panel"
+      output="screen"/>
+  
+</launch>
