@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Circular SLAM</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Konfigürasyonu -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        background: '#0a0a0a',
+                        surface: '#111111',
+                        surfaceBorder: '#222222',
+                        primary: '#ededed',
+                        secondary: '#a1a1aa',
+                        accent: '#3b82f6',
+                        ros: '#22c55e'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.primary');
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Language Toggle Logic */
+        body.lang-tr .en { display: none !important; }
+        body.lang-en .tr { display: none !important; }
+
+        /* Arka plan ızgara deseni */
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .glow-box::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.3), rgba(34, 197, 94, 0.1), transparent);
+            border-radius: inherit;
+            z-index: -1;
+        }
+
+        .node-card {
+            background: linear-gradient(180deg, rgba(24, 24, 27, 0.8) 0%, rgba(10, 10, 10, 0.8) 100%);
+            border: 1px solid theme('colors.surfaceBorder');
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+        
+        .node-card:hover {
+            border-color: theme('colors.secondary');
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="lang-tr selection:bg-accent selection:text-white relative overflow-x-hidden">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full border-b border-surfaceBorder bg-background/80 backdrop-blur-md z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="font-semibold tracking-tight text-lg flex items-center gap-2">
+                <i class="ph ph-hexagon text-accent"></i>
+                <span class="hidden sm:inline">Adaptive Circular SLAM</span>
+                <span class="sm:hidden">ACS</span>
+            </div>
+            <div class="flex items-center gap-4 sm:gap-6 text-sm font-medium text-secondary">
+                <a href="#abstract" class="hover:text-primary transition-colors hidden sm:inline">
+                    <span class="tr">Özet</span><span class="en">Abstract</span>
+                </a>
+                <a href="#architecture" class="hover:text-primary transition-colors hidden sm:inline">
+                    <span class="tr">Mimari</span><span class="en">Architecture</span>
+                </a>
+                
+                <!-- Language Switcher -->
+                <button id="langToggle" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surfaceBorder/50 border border-surfaceBorder hover:bg-surfaceBorder transition-colors text-primary text-xs">
+                    <i class="ph ph-translate text-base"></i>
+                    <span class="tr font-bold">TR</span>
+                    <span class="en font-bold">EN</span>
+                </button>
+
+                <a href="https://github.com/SENIN_KULLANICI_ADIN/adaptive_circular_slam" target="_blank" class="flex items-center gap-2 bg-primary text-background px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-primary/90 transition-colors">
+                    <i class="ph-fill ph-github-logo text-lg"></i>
+                    <span class="hidden sm:inline">GitHub</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="absolute inset-0 bg-grid z-0"></div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surfaceBorder/50 border border-surfaceBorder text-xs font-mono text-secondary mb-8 fade-up">
+                <span class="w-2 h-2 rounded-full bg-ros animate-pulse"></span>
+                <span class="tr">ROS Noetic Uyumlu Framework</span>
+                <span class="en">ROS Noetic Compatible Framework</span>
+            </div>
+            
+            <h1 class="text-5xl lg:text-7xl font-bold tracking-tighter mb-6 fade-up" style="transition-delay: 100ms;">
+                <span class="tr">Sağlık Farkındalıklı <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-500">Otonom Keşif</span> Sistemi</span>
+                <span class="en">Health-Aware <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-500">Autonomous Exploration</span></span>
+            </h1>
+            
+            <p class="mt-6 text-lg lg:text-xl text-secondary max-w-3xl mx-auto font-light leading-relaxed fade-up" style="transition-delay: 200ms;">
+                <span class="tr">Mobil robotlar için geliştirilmiş, bilgi kazancını (information gain) ve konumlandırma sağlığını (localization health) eşzamanlı optimize eden tam kapsamlı adaptif navigasyon mimarisi.</span>
+                <span class="en">A comprehensive adaptive navigation architecture developed for mobile robots, simultaneously optimizing information gain and localization health.</span>
+            </p>
+
+            <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4 fade-up" style="transition-delay: 300ms;">
+                <a href="#installation" class="px-6 py-3 rounded-lg bg-primary text-background font-medium hover:bg-primary/90 transition-all text-center">
+                    <span class="tr">Başlangıç Kılavuzu</span>
+                    <span class="en">Getting Started</span>
+                </a>
+                <a href="#architecture" class="px-6 py-3 rounded-lg bg-surface border border-surfaceBorder text-primary font-medium hover:bg-surfaceBorder transition-all flex items-center justify-center gap-2">
+                    <i class="ph ph-file-code"></i> 
+                    <span class="tr">Sistemi İncele</span>
+                    <span class="en">Explore Architecture</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Abstract / Özet Bölümü -->
+    <section id="abstract" class="py-24 border-t border-surfaceBorder bg-surface/30">
+        <div class="max-w-4xl mx-auto px-6 fade-up">
+            <h2 class="text-xs font-mono text-accent uppercase tracking-widest mb-3">
+                <span class="tr">01 // Proje Özeti</span>
+                <span class="en">01 // Project Abstract</span>
+            </h2>
+            <h3 class="text-3xl font-semibold mb-8">
+                <span class="tr">Neden Adaptive Circular SLAM?</span>
+                <span class="en">Why Adaptive Circular SLAM?</span>
+            </h3>
+            <div class="prose prose-invert prose-lg text-secondary">
+                <p class="mb-6 tr">
+                    Geleneksel otonom robot keşif algoritmaları (frontier-based vb.), rotalarını çizerken genellikle robotun kendi konumundan ne kadar emin olduğunu (SLAM belirsizliği) göz ardı eder. Bu durum, sensör verisinin az olduğu dar koridorlarda robotun tamamen kaybolmasına (kidnapped robot problemi) yol açabilir.
+                </p>
+                <p class="mb-6 en">
+                    Traditional autonomous robot exploration algorithms (like frontier-based) often ignore how confident the robot is in its own position (SLAM uncertainty) when plotting routes. This can lead to the robot becoming completely lost in sensor-deprived environments, known as the "kidnapped robot" problem.
+                </p>
+                
+                <p class="tr">
+                    Bu sistem, robotun <strong>AMCL kovaryans</strong> değerlerini ve <strong>TF (Transform) sıçramalarını</strong> gerçek zamanlı olarak izleyerek bir "Sağlık Skoru" (Health Metric) üretir. Robot, durumundan emin olduğunda agresif bir keşif stratejisi izlerken (<code>EXPLORE</code>), belirsizlik arttığında kısa adımlı güvenli manevralara geçer (<code>RECOVER</code>) veya tamamen durarak güvenlik protokolünü devreye sokar (<code>PAUSE</code>).
+                </p>
+                <p class="en">
+                    This system generates a "Health Score" by monitoring the robot's <strong>AMCL covariance</strong> and <strong>TF jumps</strong> in real-time. When confident, the robot follows an aggressive exploration strategy (<code>EXPLORE</code>). When uncertainty rises, it shifts to safe, short-step maneuvers (<code>RECOVER</code>), or completely halts to activate safety protocols (<code>PAUSE</code>).
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mimari (Architecture) Bölümü -->
+    <section id="architecture" class="py-24 border-t border-surfaceBorder">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-xs font-mono text-accent uppercase tracking-widest mb-3 fade-up">
+                <span class="tr">02 // Sistem Mimarisi</span>
+                <span class="en">02 // System Architecture</span>
+            </h2>
+            <h3 class="text-3xl font-semibold mb-16 fade-up">
+                <span class="tr">Modüler C++ Düğüm (Node) Yapısı</span>
+                <span class="en">Modular C++ Node Structure</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 1. Circle Generator -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-4 border border-accent/20">
+                        <i class="ph ph-target text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">circle_generator.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">Robotun etrafında (360°) veya belirli açılarda dinamik çözünürlüklü dairesel aday hedefler (candidate goals) oluşturur.</span>
+                        <span class="en">Generates circular candidate goals with dynamic resolution around the robot (360°) or at specific arcs.</span>
+                    </p>
+                </div>
+
+                <!-- 2. Gain Evaluator -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500 mb-4 border border-green-500/20">
+                        <i class="ph ph-function text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">gain_evaluator_node.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">Hedefleri, çevrelerindeki bilinmeyen hücre yoğunluğuna (information gain) ve engellere olan güvenli uzaklığına (clearance) göre puanlar.</span>
+                        <span class="en">Scores targets based on surrounding unknown cell density (information gain) and safe distance to obstacles (clearance).</span>
+                    </p>
+                </div>
+
+                <!-- 3. Circle Scoring (Core) -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4 border border-blue-500/20">
+                        <i class="ph ph-math-operations text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">circle_scoring.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">Çember üzerindeki noktaların mesafe ve ağırlık hesaplamalarını barındıran çekirdek matematik kütüphanesidir.</span>
+                        <span class="en">The core mathematical library containing distance and weight calculations for points along the generated circle.</span>
+                    </p>
+                </div>
+
+                <!-- 4. SLAM Health Monitor -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 border border-red-500/20">
+                        <i class="ph ph-heartbeat text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">slam_health_monitor_node.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">TF sıçramalarını ve AMCL verisini analiz ederek 0.0 ile 1.0 arasında normalize edilmiş anlık konumlandırma sağlığı (health) yayınlar.</span>
+                        <span class="en">Analyzes TF jumps and AMCL data to publish a normalized real-time localization health score between 0.0 and 1.0.</span>
+                    </p>
+                </div>
+
+                <!-- 5. Decision Manager -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 mb-4 border border-purple-500/20">
+                        <i class="ph ph-brain text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">decision_manager_node.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">Tüm verileri birleştirir. Histerezis filtresi uygulayarak kararsızlığı (osilasyon) engeller ve o anki en güvenli optimimum rotayı seçer.</span>
+                        <span class="en">Fuses all data. Applies a hysteresis filter to prevent oscillation and selects the safest, most optimal route.</span>
+                    </p>
+                </div>
+
+                <!-- 6. Motion Executor -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 mb-4 border border-orange-500/20">
+                        <i class="ph ph-steering-wheel text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">motion_executor_node.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">Kararı eyleme dönüştürür. `move_base` Action Client'ı yönetir, zaman aşımı denetimi yapar ve Acil Stop (E-Stop) protokollerini uygular.</span>
+                        <span class="en">Translates decisions into actions. Manages `move_base` Action Client, handles timeouts, and enforces Emergency Stop (E-Stop) protocols.</span>
+                    </p>
+                </div>
+
+                <!-- 7. Candidate Visualizer -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-500 mb-4 border border-pink-500/20">
+                        <i class="ph ph-eye text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">candidate_visualizer_node.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">RViz için Marker'lar yayınlayarak algoritmanın aday noktalarını ve en iyi hedefini ekranda görselleştirir.</span>
+                        <span class="en">Publishes Markers for RViz, visualizing the algorithm's candidate points and the selected best goal on the screen.</span>
+                    </p>
+                </div>
+
+                <!-- 8. Control Panel -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500 mb-4 border border-cyan-500/20">
+                        <i class="ph ph-sliders text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">acs_control_panel_node.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">Sistemin durumunu canlı izlemek ve otonomi döngüsüne manuel müdahale (Başlat/Durdur) etmek için dashboard arayüzü sunar.</span>
+                        <span class="en">Provides a dashboard interface for live system monitoring and manual intervention (Start/Stop) of the autonomy loop.</span>
+                    </p>
+                </div>
+
+                <!-- 9. Metrics Logger -->
+                <div class="node-card p-6 rounded-xl fade-up">
+                    <div class="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 mb-4 border border-yellow-500/20">
+                        <i class="ph ph-chart-line text-xl"></i>
+                    </div>
+                    <h4 class="font-mono text-sm text-primary mb-2">metrics_logger_node.cpp</h4>
+                    <p class="text-sm text-secondary leading-relaxed">
+                        <span class="tr">Uçuş sonrası analizler için robotun mod geçişlerini, skorları ve sağlık durumunu 1 Hz frekansında CSV dosyasına kaydeder.</span>
+                        <span class="en">Logs robot mode transitions, scores, and health status to a CSV file at 1 Hz for post-flight analysis.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kurulum (Terminal) Bölümü -->
+    <section id="installation" class="py-24 border-t border-surfaceBorder bg-background">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-xs font-mono text-accent uppercase tracking-widest mb-3 fade-up">
+                <span class="tr">03 // Entegrasyon</span>
+                <span class="en">03 // Integration</span>
+            </h2>
+            <h3 class="text-3xl font-semibold mb-8 fade-up">
+                <span class="tr">Kurulum ve Çalıştırma</span>
+                <span class="en">Installation & Execution</span>
+            </h3>
+            
+            <div class="relative glow-box rounded-xl bg-[#0d1117] border border-surfaceBorder overflow-hidden fade-up">
+                <div class="flex items-center px-4 py-3 border-b border-surfaceBorder bg-[#161b22]">
+                    <div class="flex gap-2">
+                        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+                    </div>
+                    <div class="ml-4 text-xs font-mono text-secondary">bash - ros_workspace</div>
+                </div>
+                <div class="p-6 font-mono text-sm leading-relaxed overflow-x-auto">
+                    <div class="text-[#8b949e] mb-1">
+                        <span class="tr"># 1. Çalışma alanına (workspace) geçiş yapın</span>
+                        <span class="en"># 1. Navigate to your workspace</span>
+                    </div>
+                    <div class="text-[#c9d1d9] mb-4"><span class="text-[#79c0ff]">cd</span> ~/msb_agilex_ws/src</div>
+
+                    <div class="text-[#8b949e] mb-1">
+                        <span class="tr"># 2. Kaynak kodları klonlayın</span>
+                        <span class="en"># 2. Clone the repository</span>
+                    </div>
+                    <div class="text-[#c9d1d9] mb-4"><span class="text-[#79c0ff]">git clone</span> https://github.com/SENIN_KULLANICI_ADIN/adaptive_circular_slam.git</div>
+
+                    <div class="text-[#8b949e] mb-1">
+                        <span class="tr"># 3. ROS paketlerini derleyin</span>
+                        <span class="en"># 3. Build the ROS packages</span>
+                    </div>
+                    <div class="text-[#c9d1d9] mb-4">
+                        <span class="text-[#79c0ff]">cd</span> ~/msb_agilex_ws<br>
+                        <span class="text-[#79c0ff]">catkin_make</span><br>
+                        <span class="text-[#79c0ff]">source</span> devel/setup.bash
+                    </div>
+
+                    <div class="text-[#8b949e] mb-1">
+                        <span class="tr"># 4. Sistemi başlatın (Simülasyon için acs_sim.launch kullanın)</span>
+                        <span class="en"># 4. Launch the system (use acs_sim.launch for simulation)</span>
+                    </div>
+                    <div class="text-[#c9d1d9]">
+                        <span class="text-[#79c0ff]">roslaunch</span> adaptive_circular_slam acs_real.launch
+                    </div>
+                </div>
+            </div>
+
+            <!-- E-Stop Uyarı Kartı -->
+            <div class="mt-8 p-5 rounded-lg border border-red-500/20 bg-red-500/5 flex items-start gap-4 fade-up">
+                <i class="ph-fill ph-warning-octagon text-red-500 text-2xl mt-1"></i>
+                <div>
+                    <h4 class="text-red-500 font-medium mb-1">
+                        <span class="tr">Acil Durum Freni (E-Stop)</span>
+                        <span class="en">Emergency Stop (E-Stop)</span>
+                    </h4>
+                    <p class="text-sm text-secondary font-mono">
+                        <span class="tr">Robotu otonom sürüş sırasında anında durdurmak için:</span>
+                        <span class="en">To instantly halt the robot during autonomous driving:</span>
+                        <br>
+                        <code class="bg-black/30 px-2 py-1 rounded text-[#c9d1d9] mt-2 inline-block break-all">rostopic pub -1 /move_base/cancel actionlib_msgs/GoalID -- {}</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-10 border-t border-surfaceBorder bg-background text-center">
+        <div class="text-secondary text-sm">
+            <p>
+                <span class="tr">Otonom Robotik Sistemleri Araştırma Projesi &copy; 2024</span>
+                <span class="en">Autonomous Robotic Systems Research Project &copy; 2024</span>
+            </p>
+            <p class="mt-2 text-xs font-mono opacity-50">Built with ROS Noetic & C++</p>
+        </div>
+    </footer>
+
+    <!-- Scriptler -->
+    <script>
+        // Language Toggle Script
+        const langToggleBtn = document.getElementById('langToggle');
+        
+        langToggleBtn.addEventListener('click', () => {
+            if (document.body.classList.contains('lang-tr')) {
+                document.body.classList.remove('lang-tr');
+                document.body.classList.add('lang-en');
+                document.documentElement.lang = 'en';
+            } else {
+                document.body.classList.remove('lang-en');
+                document.body.classList.add('lang-tr');
+                document.documentElement.lang = 'tr';
+            }
+        });
+
+        // Scroll Animasyon Scripti
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-up').forEach((elem) => {
+            observer.observe(elem);
+        });
+    </script>
+</body>
+</html>
