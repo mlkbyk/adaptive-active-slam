@@ -1,120 +1,40 @@
-# Adaptive Active SLAM
+# 🔄 Adaptive Circular SLAM (ACS)
 
-A modular health-aware active exploration framework for mobile robots built on ROS (Noetic).
+![ROS](https://img.shields.io/badge/ROS-Noetic-brightgreen.svg)
+![Robot](https://img.shields.io/badge/Robot-AgileX_Limo-orange.svg)
 
-This project implements an adaptive circular candidate generation strategy combined with information gain scoring and SLAM health monitoring to autonomously select safe and informative navigation goals.
+This repository contains a modular, health-aware active exploration and autonomous navigation framework built on **ROS Noetic**. It enables mobile robots (specifically tested on AgileX Limo) to autonomously explore unknown environments while monitoring localization stability and safety.
 
 ---
 
-## 🚀 Overview
+## ✨ Key Features
 
-Autonomous exploration requires balancing:
-
-- Information gain (unknown space discovery)
-- Localization stability
-- Navigation safety
-
-This framework introduces a health-aware decision pipeline:
-
-1. **Circular Candidate Generation**
-   - Generates candidate goals around the robot in the map frame.
-   - Radius and resolution configurable at runtime.
-
-2. **Information Gain Evaluation**
-   - Scores candidates based on nearby unknown cell density.
-   - Penalizes obstacle proximity.
-   - Incorporates SLAM health into total score.
-
-3. **SLAM Health Monitoring**
-   - Monitors TF stability and localization consistency.
-   - Publishes a normalized health metric (0–1).
-
-4. **Adaptive Decision Manager**
-   - Selects best candidate with hysteresis.
-   - Supports exploration modes:
-     - `EXPLORE`
-     - `RECOVER`
-     - `PAUSE`
-   - Prevents unstable or oscillatory goal switching.
-
-5. **Safe Goal Execution**
-   - Sends goals via `move_base`.
-   - Includes timeout and minimum interval safeguards.
+* **360° Candidate Generation:** Dynamically generates navigation goals in a circular pattern around the robot.
+* **SLAM Health Monitoring:** Real-time monitoring of AMCL covariance and TF stability to determine localization quality.
+* **Adaptive Behavior Modes:**
+    * `EXPLORE`: Aggressive exploration when SLAM health is high.
+    * `RECOVER`: Conservative movement and re-localization when health drops.
+    * `PAUSE`: Complete halt if SLAM stability is compromised.
+* **Safety Footprint Overrides:** Custom launch parameters to adjust robot radius and inflation layers without changing global robot settings.
+* **Metrics Logging:** Automatically saves session data (health, scores, modes) to CSV for post-mission analysis.
 
 ---
 
 ## 🧩 System Architecture
-circle_generator_node
-↓
-gain_evaluator_node
-↓
-slam_health_monitor_node
-↓
-decision_manager_node
-↓
-motion_executor_node → move_base
 
+The package consists of several specialized nodes:
 
-Optional:
-- `candidate_visualizer_node`
-- `metrics_logger_node`
-- `acs_control_panel_node`
+1.  **`circle_generator_node`**: Creates potential goal candidates in a circular/arc formation.
+2.  **`gain_evaluator_node`**: Scores candidates based on information gain (unknown cells) and obstacle risk.
+3.  **`slam_health_monitor_node`**: Publishes a normalized health metric (0.0 - 1.0) based on AMCL and TF jumps.
+4.  **`decision_manager_node`**: Selects the optimal goal based on score, health, and hysteresis.
+5.  **`motion_executor_node`**: Manages the `move_base` action client and prevents goal oscillations.
 
 ---
 
-## 📦 Nodes
+## 🛠 Installation
 
-| Node | Description |
-|------|------------|
-| `circle_generator_node` | Generates circular candidate goals around robot |
-| `gain_evaluator_node` | Computes information gain & risk scores |
-| `slam_health_monitor_node` | Publishes localization health metric |
-| `decision_manager_node` | Selects optimal candidate with adaptive logic |
-| `motion_executor_node` | Sends goal to move_base |
-| `candidate_visualizer_node` | Publishes RViz markers |
-| `metrics_logger_node` | Logs runtime metrics to CSV |
-| `acs_control_panel_node` | Lightweight ROS control interface |
-
----
-
-## 🛠 Requirements
-
-- ROS Noetic
-- move_base
-- TF2
-- nav_msgs
-- visualization_msgs
-
----
-
-## ▶️ Run (Real Robot)
-
-Assumes:
-- `/map` available
-- TF tree available
-- `move_base` running
-
-```bash
-roslaunch adaptive_circular_slam acs_real.launch
-
-▶️ Run (Simulation)
-roslaunch adaptive_circular_slam acs_sim.launch
-
-📊 Monitoring
-
-Useful tools:
-
-rqt_plot /slam_health /acs/best_score
-rostopic echo /acs/dashboard_text
-
-⚙️ Design Principles
-
-Modular architecture
-
-Runtime tunable parameters
-
-Safety-first goal switching
-
-Minimal dependency coupling
-
-Local network execution (ROS1)
+1. Clone the repository into your catkin workspace:
+   ```bash
+   cd ~/msb_agilex_ws/src
+   git clone [https://github.com/YOUR_USERNAME/adaptive_circular_slam.git](https://github.com/YOUR_USERNAME/adaptive_circular_slam.git)
