@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACS Framework | Autonomous Exploration</title>
     
-    <!-- Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script>
@@ -84,7 +81,6 @@
 
     <div class="grid-bg fixed inset-0 z-0"></div>
 
-    <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 border-b border-border bg-white/70 backdrop-blur-md">
         <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
             <div class="flex items-center gap-4">
@@ -102,14 +98,13 @@
                     <span class="tr">EN_US</span><span class="en">TR_TR</span>
                 </button>
 
-                <a href="https://github.com/m1kbyk/adaptive-active-slam" target="_blank" class="bg-ink text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-ink/90">
+                <a href="https://github.com/mlkbyk/adaptive-active-slam/tree/main/adaptive_circular_slam" target="_blank" class="bg-ink text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-ink/90">
                     REPOS_ROOT
                 </a>
             </div>
         </div>
     </nav>
 
-    <!-- Hero / Abstract -->
     <header class="relative pt-32 pb-20 px-6 z-10">
         <div class="max-w-7xl mx-auto border-l border-border pl-10">
             <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter leading-tight mb-8">
@@ -141,7 +136,6 @@
         </div>
     </header>
 
-    <!-- Node Architecture Matrix -->
     <section id="architecture" class="py-24 px-6 z-10 relative bg-white border-y border-border">
         <div class="max-w-7xl mx-auto">
             <header class="mb-16 flex items-end justify-between">
@@ -156,7 +150,6 @@
             </header>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-border">
-                <!-- 1 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_01</span>
                     <h3 class="font-bold text-lg mb-2 italic">circle_generator.cpp</h3>
@@ -165,7 +158,6 @@
                         <span class="en">Generates dynamic resolution goal candidates around the robot's perimeter.</span>
                     </p>
                 </div>
-                <!-- 2 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_02</span>
                     <h3 class="font-bold text-lg mb-2 italic">gain_evaluator_node.cpp</h3>
@@ -174,7 +166,6 @@
                         <span class="en">Scores exploration potential and safety clearance for each candidate goal.</span>
                     </p>
                 </div>
-                <!-- 3 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-accent mb-4 block underline italic font-bold">Node_03 (Core)</span>
                     <h3 class="font-bold text-lg mb-2 italic">slam_health_monitor.cpp</h3>
@@ -183,7 +174,6 @@
                         <span class="en">Calculates system confidence by monitoring AMCL covariance and TF stability.</span>
                     </p>
                 </div>
-                <!-- 4 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_04</span>
                     <h3 class="font-bold text-lg mb-2 italic">decision_manager_node.cpp</h3>
@@ -192,7 +182,6 @@
                         <span class="en">Governs the state transition logic between Explore, Recover, and Pause modes.</span>
                     </p>
                 </div>
-                <!-- 5 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_05</span>
                     <h3 class="font-bold text-lg mb-2 italic">motion_executor_node.cpp</h3>
@@ -201,7 +190,6 @@
                         <span class="en">Transmits selected goals to move_base and enforces emergency protocols.</span>
                     </p>
                 </div>
-                <!-- 6 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_06</span>
                     <h3 class="font-bold text-lg mb-2 italic">candidate_visualizer_node.cpp</h3>
@@ -210,7 +198,6 @@
                         <span class="en">Responsible for real-time visualization of markers and scores in RViz.</span>
                     </p>
                 </div>
-                <!-- 7 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_07</span>
                     <h3 class="font-bold text-lg mb-2 italic">acs_control_panel_node.cpp</h3>
@@ -219,7 +206,6 @@
                         <span class="en">Provides a manual intervention and live status monitoring interface.</span>
                     </p>
                 </div>
-                <!-- 8 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_08</span>
                     <h3 class="font-bold text-lg mb-2 italic">metrics_logger_node.cpp</h3>
@@ -228,7 +214,6 @@
                         <span class="en">Logs system performance metrics in CSV format for post-analysis.</span>
                     </p>
                 </div>
-                <!-- 9 -->
                 <div class="tech-card p-8 border-r border-b border-border bg-white group hover:bg-surface">
                     <span class="mono-label text-muted mb-4 block">Node_09</span>
                     <h3 class="font-bold text-lg mb-2 italic">circle_scoring.cpp</h3>
@@ -241,7 +226,6 @@
         </div>
     </section>
 
-    <!-- Experimental Analysis / Validation Section -->
     <section id="results" class="py-24 px-6 z-10 relative">
         <div class="max-w-7xl mx-auto">
             <header class="mb-16">
@@ -253,14 +237,15 @@
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                <!-- Case A -->
                 <div class="space-y-6">
                     <div class="aspect-video bg-surface border border-border overflow-hidden relative group">
-                        <!-- Placeholder for RViz Screen -->
-                        <div class="absolute inset-0 flex items-center justify-center text-muted font-mono text-[10px] uppercase">
-                            [Image: RViz_Global_Exploration_Overview]
-                        </div>
-                        <img src="https://via.placeholder.com/800x450/f1f5f9/94a3b8?text=Experimental_Visual_A" class="w-full h-full object-cover">
+                        <iframe class="w-full h-full object-cover" 
+                            src="https://www.youtube.com/embed/OdbPy3jTLYI?autoplay=1&mute=1&loop=1&playlist=OdbPy3jTLYI" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
                     </div>
                     <div class="border-t border-ink pt-4">
                         <h4 class="font-bold text-xl mb-2 uppercase tracking-tight">
@@ -274,14 +259,15 @@
                     </div>
                 </div>
 
-                <!-- Case B -->
                 <div class="space-y-6">
                     <div class="aspect-video bg-surface border border-border overflow-hidden relative group">
-                        <!-- Placeholder for Graph -->
-                        <div class="absolute inset-0 flex items-center justify-center text-muted font-mono text-[10px] uppercase">
-                            [Image: SLAM_Health_Convergence_Graph]
-                        </div>
-                        <img src="https://via.placeholder.com/800x450/f1f5f9/94a3b8?text=Data_Log_Analysis_B" class="w-full h-full object-cover">
+                        <iframe class="w-full h-full object-cover" 
+                            src="https://www.youtube.com/embed/pCF5ftefZgA?autoplay=1&mute=1&loop=1&playlist=pCF5ftefZgA" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
                     </div>
                     <div class="border-t border-ink pt-4">
                         <h4 class="font-bold text-xl mb-2 uppercase tracking-tight">
@@ -298,7 +284,6 @@
         </div>
     </section>
 
-    <!-- Installation -->
     <section id="installation" class="py-24 px-6 z-10 relative border-t border-border bg-surface">
         <div class="max-w-3xl mx-auto">
             <h2 class="mono-label text-ink mb-12 text-center underline">-- Deployment_Instructions --</h2>
@@ -312,7 +297,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="py-12 border-t border-border text-center relative z-10">
         <p class="mono-label text-muted">m1kbyk &copy; 2024 • Academic Robotics Project</p>
     </footer>
